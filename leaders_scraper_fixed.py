@@ -99,7 +99,8 @@ def get_leaders():
                 wikipedia_url = leader["wikipedia_url"]
                 time.sleep(0.1) # Pause before next request
                 leader["Bio"] = get_first_paragraph(wikipedia_url, s)               
-                 
+        
+        save_leaders_by_country()         
         return leaders_by_country
    
     
@@ -108,14 +109,16 @@ def get_leaders():
     # dumps it in the leaders.json file
     # opens and prints it. 
 def save_leaders_by_country():
-    with open("leaders.json", "w") as leaders_json:
+    with open("leaders_fixed.json", "w") as leaders_json:
         json.dump(leaders_by_country, leaders_json, indent=2)
-    with open("leaders.json", "r") as file:
-        print(json.load(file))
+    with open("leaders_fixed.json", "r") as file:
+        #print(json.load(file))
+        pass
 
         
 ##        
 ## Calling the functions:
 ##
 get_leaders()
-print(leaders_by_country)
+#print(leaders_by_country)
+save_leaders_by_country()
