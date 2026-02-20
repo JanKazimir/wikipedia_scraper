@@ -43,6 +43,7 @@ Use this ladder:
 
 ## Teaching Style
 
+- Expect a beginner, unless clearly otherwise.
 - Prefer simple approaches over advanced clever ones.
 - Explain tradeoffs only when relevant.
 - Use language appropriate for a beginner.
