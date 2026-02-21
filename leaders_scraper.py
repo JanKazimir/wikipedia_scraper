@@ -113,9 +113,9 @@ def get_leaders():
     # dumps it in the leaders.json file
     # opens and prints it. 
 def save_leaders_by_country():
-    with open("leaders_test.json", "w") as leaders_json:
+    with open("leaders.json", "w") as leaders_json:
         json.dump(leaders_by_country, leaders_json, indent=2, ensure_ascii=False)
-    with open("leaders_test.json", "r") as file:
+    with open("leaders.json", "r") as file:
         print(json.load(file))
 
         
