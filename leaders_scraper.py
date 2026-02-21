@@ -15,13 +15,18 @@ def get_first_paragraph(wikipedia_url, session=requests.Session()):
     # 1/ Get a wikipedia page 
     # 2/ Get the paragraphs > put them in a list
     # 3/ Get the first bold Paragraph > print it 
-    to_return = ""
+    biography_paragraph = ""
     
     # 1/ Making a request, checking it all works:
     ## we print the url we'll use:
     print(wikipedia_url) # keep this for the rest of the notebook
     
+    if session is None: # in case the session didn't pass through, set one.
+        session = requests.Session()
+        s_cookie = session.get("https://country-leaders.onrender.com/cookie")
+    
     ## Setting headers, making the request, printing status code:  
+    #!! implement try except here.
     headers = {"User-Agent": "Python exercise, I'll behave!"}
     r = session.get(wikipedia_url, headers=headers, timeout=10)
     # print(r.status_code) : checks for status, reactivate to debug
@@ -30,36 +35,36 @@ def get_first_paragraph(wikipedia_url, session=requests.Session()):
     ## Create a Beautifulsoup object, a empty paragraphs list.
     soup = BeautifulSoup(r.text, "html.parser")
     paragraphs = []
+    first_non_empty_paragraph = ""
+    
     
     ## Fills up the paragrapgh list with all the paragraphs
     for par in soup.find_all("p"):        
-        paragraphs.append(par)  
+        paragraphs.append(par)
+         
     
-    
-    first_bold = par.find("b")
-    # Filtering for the first paragraph that start with bold:    
-    ## Looping though our paragraphs:
+    # Getting the first non empty bold paragraph, cleaning it and setting it as the bio
     for par in paragraphs:
-        if not par.get_text(strip=True):   # if the paragraph is empty, skip it
+        paragraph_text = par.get_text(" ", strip=True) 
+        if not paragraph_text:   # if the paragraph is empty, skip it
             continue
-        
+        # if the paragraph has text, find the bold
+        if paragraph_text:
+            first_bold = par.find("b")
+            if first_bold is None: 
+                continue # skip the empty ones.
 
-    ### find a paragraph that begins with some bold      
-        if first_bold is None:
-            continue
-    #print(first_bold)
-    
-        
-        ### If the paragraph is not empty, clean it up, print its text and break.
-        if first_bold:
-            before_print = re.sub(r"(\(.*\[\d]\))", "", par.get_text())
-            before_print2 = re.sub(r"\[\w\]", "", before_print)
-            to_print = re.sub(r"\s{2,}", " ", before_print2)
-            print(to_print)
-            to_return = to_print
-            break
-    
-    return to_return  
+            if first_bold: # clean the first bold paragraph and set it as the bio paragraph
+                cleanish_text = re.sub(r"(\(.*\[\d]\))", " " ,paragraph_text)
+                cleanerish_text = re.sub(r"\[[^\]]+\]", " ", cleanish_text)
+                cleaner_text = re.sub(r"\[\w\]", " " , cleanerish_text)
+                clean_text = re.sub(r"\s+", " " , cleaner_text).strip() 
+                biography_paragraph = clean_text
+                print(clean_text)
+                break
+                
+  
+    return biography_paragraph  
 
 
 
@@ -108,9 +113,9 @@ def get_leaders():
     # dumps it in the leaders.json file
     # opens and prints it. 
 def save_leaders_by_country():
-    with open("leaders.json", "w") as leaders_json:
-        json.dump(leaders_by_country, leaders_json, indent=2)
-    with open("leaders.json", "r") as file:
+    with open("leaders_test.json", "w") as leaders_json:
+        json.dump(leaders_by_country, leaders_json, indent=2, ensure_ascii=False)
+    with open("leaders_test.json", "r") as file:
         print(json.load(file))
 
         
@@ -118,4 +123,5 @@ def save_leaders_by_country():
 ## Calling the functions:
 ##
 get_leaders()
+save_leaders_by_country()
 print(leaders_by_country)
