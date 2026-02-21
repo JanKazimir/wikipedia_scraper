@@ -118,6 +118,17 @@ def save_leaders_by_country():
     with open("leaders.json", "r") as file:
         print(json.load(file))
 
+
+def save_leader_by_country_with_switch(format=json):
+    if format == "json":
+            with open("leaders.json", "w") as leaders_json:
+                json.dump(leaders_by_country, leaders_json, indent=2, ensure_ascii=False)
+            with open("leaders.json", "r") as file:
+                print(json.load(file))
+    else: 
+        
+
+
         
 ##        
 ## Calling the functions:
