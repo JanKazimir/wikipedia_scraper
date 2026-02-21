@@ -4,13 +4,18 @@ import requests
 import re
 from bs4 import BeautifulSoup
 import time
-import random
 
 # this is out target: we want it full of leaders, with the first paragraph of their bios
 leaders_by_country = {} 
 
+
+def clean_paragraph_text(text):
+    without_references = re.sub(r"\[[^\]]+\]", "", text)
+    return re.sub(r"\s+", " ", without_references).strip()
+
+
 ## This function retrieves the first paragraph of a url, cleans it and add it to the bio
-def get_first_paragraph(wikipedia_url, session=requests.Session()):
+def get_first_paragraph(wikipedia_url, session=None):
     
     # 1/ Get a wikipedia page 
     # 2/ Get the paragraphs > put them in a list
@@ -20,28 +25,42 @@ def get_first_paragraph(wikipedia_url, session=requests.Session()):
     # 1/ Making a request, checking it all works:
     ## we print the url we'll use:
     print(wikipedia_url) # keep this for the rest of the notebook
+
+    if session is None:
+        session = requests.Session()
     
     ## Setting headers, making the request, printing status code:  
     headers = {"User-Agent": "Python exercise, I'll behave!"}
-    r = session.get(wikipedia_url, headers=headers, timeout=10)
+    try:
+        r = session.get(wikipedia_url, headers=headers, timeout=10)
+    except requests.RequestException as error:
+        print(f"Request failed for {wikipedia_url}: {error}")
+        return ""
     # print(r.status_code) : checks for status, reactivate to debug
     
     # 2/ Retrieving the text from the request:
     ## Create a Beautifulsoup object, a empty paragraphs list.
     soup = BeautifulSoup(r.text, "html.parser")
     paragraphs = []
+    first_non_empty_paragraph = ""
     
     ## Fills up the paragrapgh list with all the paragraphs
     for par in soup.find_all("p"):        
         paragraphs.append(par)  
     
     
-    first_bold = par.find("b")
-    # Filtering for the first paragraph that start with bold:    
+    # Filtering for the first paragraph that start with bold:
     ## Looping though our paragraphs:
     for par in paragraphs:
-        if not par.get_text(strip=True):   # if the paragraph is empty, skip it
+        paragraph_text = par.get_text(" ", strip=True)
+        if not paragraph_text:   # if the paragraph is empty, skip it
             continue
+
+        cleaned_text = clean_paragraph_text(paragraph_text)
+        if not first_non_empty_paragraph:
+            first_non_empty_paragraph = cleaned_text
+
+        first_bold = par.find("b")
         
 
     ### find a paragraph that begins with some bold      
@@ -52,12 +71,13 @@ def get_first_paragraph(wikipedia_url, session=requests.Session()):
         
         ### If the paragraph is not empty, clean it up, print its text and break.
         if first_bold:
-            before_print = re.sub(r"(\(.*\[\d]\))", "", par.get_text())
-            before_print2 = re.sub(r"\[\w\]", "", before_print)
-            to_print = re.sub(r"\s{2,}", " ", before_print2)
-            print(to_print)
-            to_return = to_print
+            print(cleaned_text)
+            to_return = cleaned_text
             break
+
+    if not to_return and first_non_empty_paragraph:
+        print(first_non_empty_paragraph)
+        to_return = first_non_empty_paragraph
     
     return to_return  
 
@@ -86,21 +106,28 @@ def get_leaders():
 
         ## Getting the leaders of coutries
         for country in countries:
+            s.get(cookies_url) # getting a fresh cookie before leaders request
             params = {"country": country}
             s3 = s.get(leaders_url, params=params)
             leaders = s3.json()
-            
+
+            if not isinstance(leaders, list):
+                print(f"Skipping {country}: unexpected response: {leaders}")
+                leaders_by_country[country] = []
+                continue
+
             # putting the leaders in the leaders by country dict.
             leaders_by_country[f"{country}"] = leaders
-            s.get(cookies_url) # getting a new cookie
-                
+
             # get the leader's first paragraph, adding it to its dict.
             for leader in leaders:
-                wikipedia_url = leader["wikipedia_url"]
+                wikipedia_url = leader.get("wikipedia_url")
+                if not wikipedia_url:
+                    leader["Bio"] = ""
+                    continue
                 time.sleep(0.1) # Pause before next request
-                leader["Bio"] = get_first_paragraph(wikipedia_url, s)               
-        
-        save_leaders_by_country()         
+                leader["Bio"] = get_first_paragraph(wikipedia_url, s)
+                 
         return leaders_by_country
    
     
@@ -109,16 +136,15 @@ def get_leaders():
     # dumps it in the leaders.json file
     # opens and prints it. 
 def save_leaders_by_country():
-    with open("leaders_fixed.json", "w") as leaders_json:
+    with open("leaders.json", "w") as leaders_json:
         json.dump(leaders_by_country, leaders_json, indent=2)
-    with open("leaders_fixed.json", "r") as file:
-        #print(json.load(file))
-        pass
+    with open("leaders.json", "r") as file:
+        print(json.load(file))
 
         
 ##        
 ## Calling the functions:
 ##
-get_leaders()
-#print(leaders_by_country)
-save_leaders_by_country()
+if __name__ == "__main__":
+    get_leaders()
+    print(leaders_by_country)
