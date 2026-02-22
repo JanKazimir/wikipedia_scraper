@@ -11,7 +11,6 @@
 ### Learning objectives
 
 + ✅ venv, requests, veautifulsoup
-
 + ✅ exception handling
 + ✅ JSON
 
@@ -29,3 +28,11 @@
 + ✅ use sessions to speed up with multiprocessing (wikipedia_scraper.py runs in ~35 seconds)
 + Switch for outputing to csv or JSON
 +
+
+I'm mostly done.
+
+### To do's
+
++ clean up this document.
++ implement oop
++ finish the switch for csv saving
