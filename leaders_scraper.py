@@ -133,6 +133,7 @@ def save_leader_by_country_with_switch(format=json):
 ##        
 ## Calling the functions:
 ##
-get_leaders()
-save_leaders_by_country()
-print(leaders_by_country)
+    #get_leaders()
+    #save_leaders_by_country()
+    #print(leaders_by_country)
+        pass
